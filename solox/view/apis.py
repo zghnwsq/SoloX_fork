@@ -230,7 +230,7 @@ def getFps():
             result = {'status': 1, 'first': first, 'second': second}
         else:
             deviceId = d.getIdbyDevice(device, platform)
-            fps_monitor = FPS(pkgName=pkgname, deviceId=deviceId, platform=platform)
+            fps_monitor = FPS(pkgName=pkgname, deviceId=deviceId, platform=platform, surfaceview=surfaceview)
             fps, jank = fps_monitor.getFPS()
             result = {'status': 1, 'fps': fps, 'jank': jank}
     except Exception as e:

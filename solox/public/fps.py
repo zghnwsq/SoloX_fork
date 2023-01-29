@@ -523,9 +523,10 @@ class FPSMonitor(Monitor):
         # todo 判断是否为当前启动的进程
         if not package_name:
             package_name = self.device.adb.get_foreground_process()
+        self.surfaceview = kwargs.get('surfaceview', 'true')
         self.package = package_name
         self.fpscollector = SurfaceStatsCollector(self.device, self.frequency, package_name, fps_queue,
-                                                  self.jank_threshold, self.use_legacy)
+                                                  self.jank_threshold, self.use_legacy, surfaceview=self.surfaceview)
 
     def start(self):
         """启动FPSMonitor日志监控器

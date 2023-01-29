@@ -128,7 +128,9 @@ class Devices:
             result['version'] = adb.shell(cmd='getprop ro.build.version.release', deviceId=deviceId)
             result['serialno'] = adb.shell(cmd='getprop ro.serialno', deviceId=deviceId)
             cmd = f'ip addr show wlan0 | {self._filterType()} link/ether'
-            result['wifiadr'] = adb.shell(cmd=cmd, deviceId=deviceId).split(' ')[1]
+            # 解决模拟器或数据线连接手机且未开wifi，不能获取ip的问题
+            cmdResult = adb.shell(cmd=cmd, deviceId=deviceId)
+            result['wifiadr'] = cmdResult.split(' ')[1] if cmdResult else '127.0.0.1'
         elif platform == 'iOS':
             iosInfo = json.loads(self.execCmd('tidevice info --json'))
             result['brand'] = iosInfo['DeviceClass']
