@@ -186,13 +186,13 @@ class Flow:
         cmd = f'cat /proc/{pid}/net/dev |{d._filterType()} wlan0'
         output_pre = adb.shell(cmd=cmd, deviceId=self.deviceId)
         m_pre = re.search(r'wlan0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', output_pre)
-        sendNum_pre = round(float(float(m_pre.group(2)) / 1024), 2)
-        recNum_pre = round(float(float(m_pre.group(1)) / 1024), 2)
+        sendNum_pre = round(float(float(m_pre.group(2)) / 1024), 2) if m_pre else 0
+        recNum_pre = round(float(float(m_pre.group(1)) / 1024), 2) if m_pre else 0
         time.sleep(1)
         output_final = adb.shell(cmd=cmd, deviceId=self.deviceId)
         m_final = re.search(r'wlan0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', output_final)
-        sendNum_final = round(float(float(m_final.group(2)) / 1024), 2)
-        recNum_final = round(float(float(m_final.group(1)) / 1024), 2)
+        sendNum_final = round(float(float(m_final.group(2)) / 1024), 2) if m_pre else 0
+        recNum_final = round(float(float(m_final.group(1)) / 1024), 2) if m_pre else 0
         sendNum = round(float(sendNum_final - sendNum_pre), 2)
         recNum = round(float(recNum_final - recNum_pre), 2)
         return sendNum, recNum
