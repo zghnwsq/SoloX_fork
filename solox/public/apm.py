@@ -183,16 +183,30 @@ class Flow:
     def getAndroidNet(self):
         """Get Android upflow and downflow data, unit:KB"""
         pid = d.getPid(pkgName=self.pkgName, deviceId=self.deviceId)
-        cmd = f'cat /proc/{pid}/net/dev |{d._filterType()} wlan0'
+        # cmd = f'cat /proc/{pid}/net/dev |{d._filterType()} wlan0'
+        # 解决模拟器没有wlan0统计不到流量的问题:合并wlan0和eth0流量
+        sendNum_pre, recNum_pre, sendNum_final, recNum_final = 0, 0, 0, 0
+        cmd = f'cat /proc/{pid}/net/dev |{d._filterType()} "wlan0 eth0"'
         output_pre = adb.shell(cmd=cmd, deviceId=self.deviceId)
-        m_pre = re.search(r'wlan0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', output_pre)
-        sendNum_pre = round(float(float(m_pre.group(2)) / 1024), 2)
-        recNum_pre = round(float(float(m_pre.group(1)) / 1024), 2)
+        output_lines = output_pre.replace("\r\n", "\n").splitlines()
+        for line in output_lines:
+            m_pre = re.search(r'wlan0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', line)
+            # 解决模拟器没有wlan0后台报错的问题
+            sendNum_pre = round(float(float(m_pre.group(2)) / 1024), 2) if m_pre else 0
+            recNum_pre = round(float(float(m_pre.group(1)) / 1024), 2) if m_pre else 0
+            m_pre = re.search(r'eth0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', line)
+            sendNum_pre += round(float(float(m_pre.group(2)) / 1024), 2) if m_pre else 0
+            recNum_pre += round(float(float(m_pre.group(1)) / 1024), 2) if m_pre else 0
         time.sleep(1)
         output_final = adb.shell(cmd=cmd, deviceId=self.deviceId)
-        m_final = re.search(r'wlan0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', output_final)
-        sendNum_final = round(float(float(m_final.group(2)) / 1024), 2)
-        recNum_final = round(float(float(m_final.group(1)) / 1024), 2)
+        output_final_lines = output_final.replace("\r\n", "\n").splitlines()
+        for line in output_final_lines:
+            m_final = re.search(r'wlan0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', line)
+            sendNum_final = round(float(float(m_final.group(2)) / 1024), 2) if m_final else 0
+            recNum_final = round(float(float(m_final.group(1)) / 1024), 2) if m_final else 0
+            m_final = re.search(r'eth0:\s*(\d+)\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*\d+\s*(\d+)', line)
+            sendNum_final += round(float(float(m_final.group(2)) / 1024), 2) if m_final else 0
+            recNum_final += round(float(float(m_final.group(1)) / 1024), 2) if m_final else 0
         sendNum = round(float(sendNum_final - sendNum_pre), 2)
         recNum = round(float(recNum_final - recNum_pre), 2)
         return sendNum, recNum
